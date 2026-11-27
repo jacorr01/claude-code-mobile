@@ -60,10 +60,13 @@ plausibly play.
 ## Standalone copy
 
 `python3 tools/export-static.py <out-dir>` writes a copy of the game that needs
-no room server: one page plus its assets, all on relative paths, for any static
-host. That copy keeps its Hall of Ascents in the browser, running the same
-`logic.js` rules locally, and carries its models as base64 text for hosts that
-serve only common web file types.
+no room server: a complete site on relative paths that runs from any folder of
+any static host (GitHub Pages included). That copy keeps its Hall of Ascents in
+the browser, running the same `logic.js` rules locally.
+
+Add `--fragment` for hosts that wrap the page in their own document and serve
+only common web file types: the page becomes a body fragment with its styles
+inlined, and the models travel as base64 text.
 
 ## Develop
 
