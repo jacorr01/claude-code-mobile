@@ -1,0 +1,26 @@
+id,role,type,description,size/ratio,style line ref,source
+hero_warden,playable hero sprite,sprite,"the antlered treant guardian from the reference image holding a round root-woven stone shield, glowing green rune veins, facing right in a combat stance","1:1 1k -> 256/512px, relative_scale 1.15",STYLE FORMULA v1,generate + reference_media
+hero_gunner,playable hero sprite,sprite,"the long-coated gunner from the reference image with a heavy blue-glowing arm cannon raised, facing right in a combat stance","1:1 1k -> 256/512px, relative_scale 1.0",STYLE FORMULA v1,generate + reference_media
+hero_knight,playable hero sprite,sprite,"the ice-crowned frost knight from the reference image in spiked crystal armor with a glowing cyan heart and frost swirling around both hands, facing right in a combat stance","1:1 1k -> 256/512px, relative_scale 1.0",STYLE FORMULA v1,generate + reference_media
+en_spearman,enemy sprite realm 1,sprite,"the red-tunic legion spearman from the reference image in a steel kettle helmet thrusting a long spear, facing right","1:1 1k -> 256/512px, relative_scale 0.95",STYLE FORMULA v1,generate + reference_media
+en_brute,enemy sprite realm 1,sprite,"the hulking thorn-covered moss beast from the reference image with wooden claws and red eyes, facing right","1:1 1k -> 256/512px, relative_scale 1.5",STYLE FORMULA v1,generate + reference_media
+en_imp,enemy sprite realm 2,sprite,"the small horned ember imp of cracked black rock with glowing lava seams and red eyes, facing right","1:1 1k -> 256/512px, relative_scale 0.7",STYLE FORMULA v1,generate
+en_hound,enemy sprite realm 2,sprite,"the four-legged magma hound of charred stone with a burning mane, mid-lunge, facing right","1:1 1k -> 256/512px, relative_scale 1.0",STYLE FORMULA v1,generate
+en_wraith,enemy sprite realm 3,sprite,"the hooded frost wraith in a tattered crimson shroud with long icicle claws and red eyes, floating, facing right","1:1 1k -> 256/512px, relative_scale 1.0",STYLE FORMULA v1,generate
+en_golem,enemy sprite realm 3,sprite,"the squat ice golem of jagged blue crystal with heavy fists and a torn crimson sash, facing right","1:1 1k -> 256/512px, relative_scale 1.5",STYLE FORMULA v1,generate
+boss_colossus,boss sprite realm 1,sprite,"the towering thorn colossus of mossy boulders and twisted roots with a burning red core in its chest, arms raised, facing right","1:1 1k -> 256/512px, relative_scale 3.0",STYLE FORMULA v1,generate + reference_media
+boss_dragon,boss sprite realm 2,sprite,"the molten red dragon from the reference image with wings spread wide and lava-cracked scales, jaws open, facing right","1:1 1k -> 256/512px, relative_scale 3.6",STYLE FORMULA v1,generate + reference_media
+boss_king,boss sprite realm 3,sprite,"the colossal hollow frost king in black ice armor with a jagged crown and crimson cape, wielding a frozen greatsword, facing right","1:1 1k -> 256/512px, relative_scale 3.0",STYLE FORMULA v1,generate
+floor_verdant,arena floor realm 1,background,"an overhead arena floor of mossy concentric flagstones with creeping roots and scattered leaves, flat ground plane filling the entire frame",16:9 2k,STYLE FORMULA v1,generate
+floor_ember,arena floor realm 2,background,"an overhead arena floor of cracked sunbaked sandstone slabs with thin glowing lava fissures and scorched patches, flat ground plane filling the entire frame",16:9 2k,STYLE FORMULA v1,generate
+floor_frost,arena floor realm 3,background,"an overhead arena floor of fractured glacial lake ice with pale blue cracks and wind-blown snow drifts, flat ground plane filling the entire frame",16:9 2k,STYLE FORMULA v1,generate
+key_title,title screen key art,background,player-supplied key art,16:9,as supplied,reference_media[3]
+key_verdant,realm 1 intro card,background,player-supplied key art,16:9,as supplied,reference_media[2]
+key_ember,realm 2 intro card,background,player-supplied key art,16:9,as supplied,reference_media[1]
+key_frost,realm 3 intro card,background,player-supplied key art,16:9,as supplied,reference_media[0]
+music_battle,looping battle theme,audio,30s instrumental loop,-,-,generate
+sfx_hit,enemy hit,audio,1s,-,-,generate
+sfx_shot,hero attack,audio,1s,-,-,generate
+sfx_levelup,level up,audio,2s,-,-,generate
+sfx_roar,boss entrance,audio,3s,-,-,generate
+sfx_dash,dash,audio,1s,-,-,generate
