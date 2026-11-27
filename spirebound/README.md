@@ -14,6 +14,11 @@ fight through three realms, and take the Spire.
   three times as you climb.
 - **Three realms** — the Verdant Ruins, the Ember Canyon and the Frost Reach.
   Each is a timed swarm that ends in a guardian fight.
+- **Real 3D characters** — every champion, foe and guardian is a rigged model
+  that turns freely to face its target, casts a shadow and takes the realm's
+  light.
+- **Kill streaks and elites** — chain kills for a score multiplier; gold-marked
+  elites hit harder and drop more.
 - **Boons** — every level-up offers one of three upgrades; a fallen guardian's
   boon counts double.
 - **Hall of Ascents** — finished runs are recorded in a shared top ten. Share a
@@ -36,9 +41,12 @@ Everything lives in `app/`.
 | Path                   | What it is                                                              |
 | ---------------------- | ----------------------------------------------------------------------- |
 | `src/logic.js`         | The Hall of Ascents rules: seeds, ordered realm clears, bounded scores  |
-| `public/game.js`       | The fight: fixed-timestep simulation and canvas rendering               |
+| `public/game.js`       | The fight: fixed-timestep simulation, floor and effects rendering       |
+| `public/stage3d.js`    | The three.js layer that draws the character models over the floor       |
+| `public/models.js`     | Index of the models in `public/models` and the clips each one carries   |
+| `public/vendor/`       | three.js r170 and the loaders it needs, vendored                        |
 | `public/data.js`       | Every tunable number and every player-visible string                    |
-| `public/anims.js`      | Generated index of the animation sprite sheets in `public/art/anim`     |
+| `public/anims.js`      | Index of the sprite sheets in `public/art/anim` (the no-WebGL fallback) |
 | `public/client.js`     | Screens, HUD and the socket to the hall                                 |
 | `public/input.js`      | Keyboard, touch stick and gamepad                                       |
 | `public/audio.js`      | Music loop and sound effects                                            |
@@ -61,14 +69,24 @@ bun run build   # logic check, typecheck, bundle
 
 Debug flags on the URL: `?dev=1` shows a frame/entity overlay, `?auto=1` runs an
 autopilot (with `&hero=warden|gunner|knight`, `&ab=<ability>,<ability>` and
-`&speed=1..16`).
+`&speed=1..16`), `?realm=0..2` starts in a later realm, `?skip=<seconds>` jumps
+the realm clock forward (handy for reaching a guardian), and `?flat=1` turns the
+3D layer off and draws the sprite fallback instead.
 
-The simulation runs at a fixed 60 Hz and rendering interpolates between steps,
-so motion stays smooth on any display. Hero run and attack animations are
-sprite sheets cut from short generated clips; enemies are animated in code.
+The simulation is 2D and runs at a fixed 60 Hz; rendering interpolates between
+steps, so motion stays smooth on any display. Three canvases are stacked: the
+floor and ground effects, a transparent WebGL layer with the character models
+under a pitched orthographic camera, and a top layer for projectiles, particles,
+health bars and damage numbers. A ground point lines up exactly between them, so
+the rules never need to know which renderer is drawing.
+
+Champions carry run, idle and attack clips. Most foes carry a single move clip;
+the hound and the dragon are unrigged and rocked in code. If frames drop, the 3D
+layer lowers its resolution first and then turns shadows off.
 
 ## Credits
 
-Sprites, hero animations, ability icons, arena floors, music and sound effects
-were generated with Higgsfield from the supplied key art, which is used directly for the title and realm
-cards. The display typeface is Cinzel (SIL Open Font License).
+Character models, sprites, ability icons, arena floors, music and sound effects
+were generated with Higgsfield from the supplied key art, which is used directly
+for the title and realm cards. Rendering uses three.js (MIT). The display
+typeface is Cinzel (SIL Open Font License).
