@@ -6,7 +6,8 @@
  * Hall of Ascents. The game is fully playable offline — a run simply goes
  * unrecorded when the hall cannot be reached.
  */
-import { STR, HEROES, HERO_ORDER, REALMS, BOSSES, BOONS, ENEMIES, TUNE, SCORE_CAP } from "./data.js";
+import { STR, HEROES, HERO_ORDER, REALMS, BOSSES, ABILITIES, ENEMIES, TUNE, SCORE_CAP } from "./data.js";
+import { ANIMS } from "./anims.js";
 import { Game } from "./game.js";
 import { Sound } from "./audio.js";
 import { Input } from "./input.js";
@@ -24,6 +25,7 @@ const DEV = {
   speed: Math.max(1, Math.min(16, Number(params.get("speed")) || 1)),
   dev: params.get("dev") === "1",
   hero: params.get("hero"),
+  ab: (params.get("ab") || "").split(",").filter(Boolean),
 };
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch { return d; } },
@@ -37,7 +39,7 @@ const settings = { sound: store.get("spire:sound", "1") === "1", shake: store.ge
 
 // ── art ────────────────────────────────────────────────────────────────────
 
-const art = {};
+const art = { anims: {} };
 function loadImage(src) {
   return new Promise((res, rej) => {
     const img = new Image();
@@ -53,13 +55,18 @@ async function loadArt(id, ext) {
   art[id] = { id, img, aspect: img.naturalWidth / img.naturalHeight };
 }
 const loadFloor = (id) => loadArt(id, "jpg").catch(() => {});
+/** Animation sheets cut from generated clips; a hero without one simply uses their still. */
+async function loadAnim(hero, act, meta) {
+  const img = await loadImage(meta.src);
+  (art.anims[hero] ||= {})[act] = { ...meta, id: `${hero}_${act}`, img };
+}
 
 // ── the game, its sound and its input ──────────────────────────────────────
 
 const sound = new Sound();
 sound.on = settings.sound;
 let input = null;
-let run = { hero: store.get("spire:hero", "gunner"), ranked: false, started: false, over: true };
+let run = { hero: store.get("spire:hero", "gunner"), loadout: [], ranked: false, started: false, over: true };
 const handlers = {};
 const game = new Game($("#cv"), art, {
   poll: () => input && input.poll(),
@@ -74,7 +81,7 @@ window.__spire = { game, art };
 
 // ── screens ────────────────────────────────────────────────────────────────
 
-const SCREENS = ["load", "title", "hero", "realm", "end"];
+const SCREENS = ["load", "title", "hero", "loadout", "realm", "end"];
 function show(id) {
   for (const s of SCREENS) $("#scr-" + s).classList.toggle("show", s === id);
 }
@@ -159,7 +166,7 @@ function buildHeroes() {
     body.append(grid, kit);
     const go = el("button", "btn primary", `${STR.ascend} · ${h.name}`);
     go.type = "button";
-    go.addEventListener("click", () => startRun(id));
+    go.addEventListener("click", () => openLoadout(id));
     card.append(pic, title, body, go);
     wrap.append(card);
   }
@@ -258,12 +265,76 @@ function renderHall() {
   if (document.activeElement !== nameInput) nameInput.value = (net.view && net.view.name) || store.get("spire:name", "");
 }
 
+// ── loadout ────────────────────────────────────────────────────────────────
+
+const DOT = String.fromCharCode(183), TIMES = String.fromCharCode(215);
+const lo = { hero: null, picks: [] };
+function savedLoadout(heroId) {
+  const h = HEROES[heroId];
+  const saved = store.get("spire:lo:" + heroId, "").split(",").filter((id) => h.abilities.includes(id));
+  const picks = [...new Set(saved)].slice(0, 2);
+  for (const id of h.abilities) if (picks.length < 2 && !picks.includes(id)) picks.push(id);
+  return picks;
+}
+function iconImg(id, cls) {
+  const img = el("img", cls || "");
+  img.src = `/art/icons/${id}.webp`;
+  img.alt = "";
+  return img;
+}
+function renderLoadout() {
+  const h = HEROES[lo.hero], list = $("#abList");
+  list.textContent = "";
+  for (const id of h.abilities) {
+    const a = ABILITIES[id], slot = lo.picks.indexOf(id);
+    const card = el("button", "ab-card" + (slot >= 0 ? " on" : ""));
+    card.type = "button";
+    card.setAttribute("aria-pressed", slot >= 0 ? "true" : "false");
+    const text = el("div", "txt");
+    const head = el("b", "", a.name);
+    head.append(el("small", "", `${a.tag} ${DOT} ${a.cd}${STR.recharge}`));
+    text.append(head, el("span", "", a.desc));
+    card.append(iconImg(id), text, el("i", "slot", slot >= 0 ? String(slot + 1) : ""));
+    card.addEventListener("click", () => {
+      if (lo.picks.includes(id)) return;
+      // The older pick makes way: you always hold exactly two.
+      lo.picks.shift();
+      lo.picks.push(id);
+      sound.play("pick", 0.7);
+      renderLoadout();
+    });
+    list.append(card);
+  }
+}
+function openLoadout(heroId) {
+  sound.unlock();
+  const h = HEROES[heroId];
+  lo.hero = heroId;
+  lo.picks = savedLoadout(heroId);
+  $("#scr-loadout").style.setProperty("--c", h.color);
+  $("#loadName").textContent = h.name;
+  $("#loadPic").src = `/art/${h.sprite}.webp`;
+  const kit = $("#kitList");
+  kit.textContent = "";
+  for (const [icon, name, note] of [["dash", STR.dash, h.dashNote], [h.ult.id, h.ult.name, h.ultNote]]) {
+    const row = el("div", "kit-row");
+    const text = el("p");
+    text.append(el("b", "", name + ": "), note);
+    row.append(iconImg(icon), text);
+    kit.append(row);
+  }
+  renderLoadout();
+  show("loadout");
+}
+
 // ── run flow ───────────────────────────────────────────────────────────────
 
-function startRun(heroId) {
+function startRun(heroId, loadout) {
   sound.unlock();
+  const picks = Array.isArray(loadout) && loadout.length === 2 ? loadout : savedLoadout(heroId);
   store.set("spire:hero", heroId);
-  run = { hero: heroId, ranked: false, started: false, over: false };
+  store.set("spire:lo:" + heroId, picks.join(","));
+  run = { hero: heroId, loadout: picks, ranked: false, started: false, over: false };
   const mine = run;
   const begin = (seed, ranked) => {
     if (mine.started || run !== mine) return;
@@ -273,8 +344,11 @@ function startRun(heroId) {
     const h = HEROES[heroId];
     $("#hudPortrait").src = `/art/${h.sprite}.webp`;
     $("#hud").style.setProperty("--hero", h.color);
-    $("#dashBtn").style.setProperty("--c", h.color);
-    game.start(heroId, seed);
+    for (const id of ["dashBtn", "a1Btn", "a2Btn"]) $("#" + id).style.setProperty("--c", h.color);
+    $("#a1Btn img").src = `/art/icons/${picks[0]}.webp`;
+    $("#a2Btn img").src = `/art/icons/${picks[1]}.webp`;
+    $("#ultBtn img").src = `/art/icons/${h.ult.id}.webp`;
+    game.start(heroId, seed, picks);
   };
   const local = () => ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0) || 1;
   if (net.seated) {
@@ -357,10 +431,12 @@ handlers.choice = (c) => {
     game.pick(o.id);
   };
   c.options.forEach((o, i) => {
-    const b = BOONS.find((x) => x.id === o.id);
     const card = el("button", "card");
     card.type = "button";
-    card.append(el("div", "ico", b.icon), el("b", "", b.name), el("span", "", b.desc + (spoils ? " ×2" : "")), el("small", "", `${STR.rank} ${o.rank} / ${b.max}`), el("kbd", "", String(i + 1)));
+    card.style.animationDelay = `${i * 70}ms`;
+    const ico = el("div", "ico", o.img ? "" : o.icon);
+    if (o.img) ico.append(iconImg(o.img));
+    card.append(ico, el("b", "", o.name), el("span", "", o.desc + (spoils ? ` ${TIMES}2` : "")), el("small", "", `${STR.rank} ${o.rank} / ${o.max}`), el("kbd", "", String(i + 1)));
     card.addEventListener("click", () => choose(i));
     wrap.append(card);
   });
@@ -431,7 +507,8 @@ function toTitle() {
 
 const H = {
   hp: $("#hpFill"), hpText: $("#hpText"), xp: $("#xpFill"), lvl: $("#lvlText"), wave: $("#waveFill"), sub: $("#realmSub"),
-  score: $("#scoreText"), boss: $("#bossFill"), dash: $("#dashBtn"), ult: $("#ultBtn"),
+  score: $("#scoreText"), boss: $("#bossFill"), dash: $("#dashBtn"), ult: $("#ultBtn"), a1: $("#a1Btn"), a2: $("#a2Btn"),
+  pips: [...document.querySelectorAll("#dashBtn .charges i")],
 };
 const last = {};
 function put(node, key, value, prop) {
@@ -450,7 +527,7 @@ function hud(dt) {
   const p = game.player;
   if (!p || game.phase === "idle") return;
   put(H.hp, "hp", `${Math.max(0, (p.hp / p.maxHp) * 100).toFixed(1)}%`, "w");
-  put(H.hpText, "hpT", `${Math.ceil(p.hp)} / ${Math.round(p.maxHp)}`);
+  put(H.hpText, "hpT", `${Math.ceil(p.hp)}/${Math.round(p.maxHp)}`);
   put(H.xp, "xp", `${((p.xp / p.need) * 100).toFixed(1)}%`, "w");
   put(H.lvl, "lvl", `${STR.lvl} ${p.level}`);
   put(H.score, "score", fmt(game.score));
@@ -465,9 +542,16 @@ function hud(dt) {
     const left = Math.max(0, Math.ceil(game.realm.duration - game.realmT));
     put(H.sub, "sub", game.phase === "waves" ? `${clock(left)} ${STR.wave}` : "");
   }
-  const dashCd = Math.max(0, Math.min(1, p.dashCd / (game.hero.dashCd * p.dashMul)));
-  put(H.dash, "dash", dashCd.toFixed(2), "cd");
-  put(H.dash, "dashR", dashCd === 0, "ready");
+  const full = p.dashN >= TUNE.dash.charges;
+  put(H.dash, "dash", full ? "0.00" : Math.max(0, Math.min(1, p.dashRe / (game.hero.dashCd * p.dashMul))).toFixed(2), "cd");
+  put(H.dash, "dashR", p.dashN > 0, "ready");
+  for (let i = 0; i < H.pips.length; i++) put(H.pips[i], "pip" + i, i < p.dashN, "ready");
+  for (let i = 0; i < 2; i++) {
+    const a = p.ab[i], node = i ? H.a2 : H.a1;
+    if (!a) continue;
+    put(node, "ab" + i, Math.max(0, Math.min(1, a.cd / a.max)).toFixed(2), "cd");
+    put(node, "abR" + i, a.cd <= 0, "ready");
+  }
   put(H.ult, "ult", (1 - p.ult / TUNE.ultMax).toFixed(2), "cd");
   put(H.ult, "ultR", p.ult >= TUNE.ultMax, "ready");
 }
@@ -482,8 +566,10 @@ function wire() {
   $("#tglSound").addEventListener("click", toggleSound);
   $("#tglShake").addEventListener("click", toggleShake);
   $("#btnHeroBack").addEventListener("click", () => show("title"));
-  $("#btnAgain").addEventListener("click", () => startRun(run.hero));
+  $("#btnAgain").addEventListener("click", () => startRun(run.hero, run.loadout));
   $("#btnChange").addEventListener("click", () => show("hero"));
+  $("#btnLoadBack").addEventListener("click", () => show("hero"));
+  $("#btnStart").addEventListener("click", () => startRun(lo.hero, lo.picks.slice()));
   $("#btnResume").addEventListener("click", () => togglePause(false));
   $("#pauseBtn").addEventListener("click", () => togglePause());
   $("#btnAbandon").addEventListener("click", () => {
@@ -497,6 +583,8 @@ function wire() {
   });
   press($("#dashBtn"), "dash");
   press($("#ultBtn"), "ult");
+  press($("#a1Btn"), "a1");
+  press($("#a2Btn"), "a2");
   input.onPause = () => togglePause();
   input.onBlur = () => togglePause(true);
   $("#nameForm").addEventListener("submit", (e) => {
@@ -534,12 +622,13 @@ async function boot() {
   for (const b of Object.values(BOSSES)) sprites.add(b.sprite);
   const jobs = [...sprites].map((id) => loadArt(id, "webp").catch(() => {}));
   jobs.push(loadFloor(REALMS[0].floor), loadImage("/art/key_title.jpg").catch(() => {}));
+  for (const [hero, acts] of Object.entries(ANIMS)) for (const [act, meta] of Object.entries(acts)) jobs.push(loadAnim(hero, act, meta).catch(() => {}));
   let done = 0;
   const fill = $("#loadFill");
   await Promise.all(jobs.map((j) => j.then(() => { done++; fill.style.width = `${(done / jobs.length) * 100}%`; })));
   show("title");
   connect();
-  if (DEV.auto) startRun(HEROES[DEV.hero] ? DEV.hero : "gunner");
+  if (DEV.auto) startRun(HEROES[DEV.hero] ? DEV.hero : "gunner", DEV.ab.length === 2 ? DEV.ab : null);
 }
 
 boot();

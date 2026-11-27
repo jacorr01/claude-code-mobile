@@ -11,7 +11,9 @@ export const TUNE = {
   gemSpeed: 540,
   ultPerDmg: 0.05,
   ultMax: 100,
-  dash: { speed: 880, dur: 0.17, inv: 0.32 },
+  dash: { speed: 980, dur: 0.2, inv: 0.34, charges: 2 },
+  accel: 3600,
+  decel: 4400,
   contactInv: 0.45,
   heartChance: 0.022,
   heartHeal: 0.15,
@@ -32,7 +34,8 @@ export const HERO_ORDER = ["warden", "gunner", "knight"];
 export const HEROES = {
   warden: {
     id: "warden", name: "Rootwarden", role: "Bulwark", sprite: "hero_warden", h: 122, color: "#8dff5c",
-    hp: 175, speed: 205, dashCd: 1.7,
+    hp: 175, speed: 205, dashCd: 2.3, runRate: 1.35,
+    abilities: ["charge", "snare", "bark", "totem"],
     stats: { Vigor: 5, Might: 4, Reach: 2, Haste: 2 },
     attack: { kind: "cleave", dmg: 34, cd: 0.56, range: 150, arc: 2.3, knock: 170 },
     ult: { id: "quake", name: "Thornquake" },
@@ -42,17 +45,19 @@ export const HEROES = {
   },
   gunner: {
     id: "gunner", name: "Emberline", role: "Marksman", sprite: "hero_gunner", h: 108, color: "#5cc0ff",
-    hp: 105, speed: 245, dashCd: 1.15,
+    hp: 105, speed: 245, dashCd: 1.5, runRate: 1.7,
+    abilities: ["scatter", "grenade", "sentry", "rocketjump"],
     stats: { Vigor: 2, Might: 4, Reach: 5, Haste: 5 },
     attack: { kind: "bolt", dmg: 16, cd: 0.27, speed: 860, range: 520, r: 7 },
     ult: { id: "overcharge", name: "Overcharge" },
     blurb: "A dragon-hunter with a cannon for an arm. Fragile, fast, and never out of range.",
-    dashNote: "Quick roll — the shortest dash recovery of the three.",
+    dashNote: "Quick roll — the fastest dash recovery of the three.",
     ultNote: "The cannon runs hot: rapid piercing fire for four seconds.",
   },
   knight: {
     id: "knight", name: "Frostcrown", role: "Controller", sprite: "hero_knight", h: 110, color: "#7ff3ff",
-    hp: 130, speed: 230, dashCd: 1.5,
+    hp: 130, speed: 230, dashCd: 1.9, runRate: 1.6,
+    abilities: ["spike", "nova", "blizzard", "blink"],
     stats: { Vigor: 3, Might: 3, Reach: 4, Haste: 3 },
     attack: { kind: "shards", dmg: 11, cd: 0.5, count: 3, spread: 0.2, speed: 640, range: 410, r: 8, slow: 1.4 },
     ult: { id: "whiteout", name: "Whiteout" },
@@ -60,6 +65,26 @@ export const HEROES = {
     dashNote: "Ice slide — a burst of frost chills foes where you stop.",
     ultNote: "Freezes every foe in sight. Frozen foes take half again as much damage.",
   },
+};
+
+/**
+ * Active abilities. Each hero owns four and takes two into a run. `cd` is the
+ * recharge in seconds; the numbers that make them hit live with their code in
+ * game.js (castAbility), since each one is its own small mechanic.
+ */
+export const ABILITIES = {
+  charge: { name: "Bramble Charge", tag: "Mobility", cd: 7, desc: "Thunder forward a long way, trampling and stunning everything in the path." },
+  snare: { name: "Root Snare", tag: "Control", cd: 9, desc: "Roots burst in a wide fan ahead, wounding foes and holding them fast." },
+  bark: { name: "Ironbark", tag: "Defence", cd: 14, desc: "For 4.5 seconds take 70% less damage and wound whatever strikes you." },
+  totem: { name: "Heartwood Totem", tag: "Area", cd: 16, desc: "Plant a totem that pulses for 7 seconds, hurting foes and mending you." },
+  scatter: { name: "Scatter Blast", tag: "Burst", cd: 5, desc: "A point-blank fan of nine bolts that hurls foes back and kicks you clear." },
+  grenade: { name: "Cinder Grenade", tag: "Area", cd: 8, desc: "Lob a charge at the thickest pack. A big blast that leaves the ground burning." },
+  sentry: { name: "Sentry Drone", tag: "Summon", cd: 15, desc: "Deploy a drone that picks its own targets for 9 seconds." },
+  rocketjump: { name: "Rocket Jump", tag: "Mobility", cd: 8, desc: "Blast off the ground: scorch where you stood, sail over everything, land hard." },
+  spike: { name: "Glacial Spikes", tag: "Burst", cd: 6, desc: "A line of ice erupts ahead, piercing foes and freezing them solid." },
+  nova: { name: "Frost Nova", tag: "Control", cd: 10, desc: "A ring of frost bursts from you, freezing everything close by." },
+  blizzard: { name: "Blizzard", tag: "Area", cd: 14, desc: "Call a 6 second storm onto the thickest pack: it slows and shreds." },
+  blink: { name: "Rime Step", tag: "Mobility", cd: 7, desc: "Vanish and reappear a long way off, leaving an ice mirror that shatters." },
 };
 
 export const ENEMIES = {
@@ -75,17 +100,17 @@ export const ENEMIES = {
 };
 
 export const BOSSES = {
-  colossus: { name: "Thorn Colossus", title: "Heart of the Ruins", sprite: "boss_colossus", h: 330, r: 70, hp: 2800, speed: 60, dmg: 26, score: 3000, xp: 30, keep: 230, patterns: ["slam", "thorns", "summon"], minion: "spearman" },
-  dragon: { name: "Cinderwing", title: "Tyrant of the Canyon", sprite: "boss_dragon", h: 340, r: 86, hp: 4400, speed: 76, dmg: 32, score: 5000, xp: 40, keep: 320, patterns: ["breath", "rain", "gust"], minion: "imp" },
-  king: { name: "The Hollow King", title: "Warden of the Spire", sprite: "boss_king", h: 330, r: 66, hp: 6200, speed: 88, dmg: 38, score: 8000, xp: 50, keep: 260, patterns: ["beams", "rings", "blink", "summon"], minion: "wraith" },
+  colossus: { name: "Thorn Colossus", title: "Heart of the Ruins", sprite: "boss_colossus", h: 330, r: 70, hp: 3400, speed: 60, dmg: 26, score: 3000, xp: 30, keep: 230, patterns: ["slam", "thorns", "summon"], minion: "spearman" },
+  dragon: { name: "Cinderwing", title: "Tyrant of the Canyon", sprite: "boss_dragon", h: 340, r: 86, hp: 5400, speed: 76, dmg: 32, score: 5000, xp: 40, keep: 320, patterns: ["breath", "rain", "gust"], minion: "imp" },
+  king: { name: "The Hollow King", title: "Warden of the Spire", sprite: "boss_king", h: 330, r: 66, hp: 7600, speed: 88, dmg: 38, score: 8000, xp: 50, keep: 260, patterns: ["beams", "rings", "blink", "summon"], minion: "wraith" },
 };
 
 export const REALMS = [
   {
     id: "verdant", numeral: "I", name: "The Verdant Ruins", floor: "floor_verdant", key: "key_verdant",
-    arena: { cx: 0.48, cy: 0.6, rx: 0.4, ry: 0.33 }, ambient: "leaves", grade: "rgba(60,110,50,0.08)",
+    arena: { cx: 0.48, cy: 0.6, rx: 0.4, ry: 0.33 }, ambient: "leaves", dust: "#c3c9ad", grade: "rgba(60,110,50,0.08)",
     hint: "The Crimson Legion holds the old stones. Keep moving — your champion strikes on their own.",
-    duration: 80, rate: [1.0, 0.52], hpMul: 1, dmgMul: 1,
+    duration: 80, rate: [1.0, 0.5], hpMul: 1.12, dmgMul: 1,
     waves: [
       { t: 0, mix: [["spearman", 1]] },
       { t: 20, mix: [["spearman", 3], ["archer", 1]] },
@@ -96,9 +121,9 @@ export const REALMS = [
   },
   {
     id: "ember", numeral: "II", name: "The Ember Canyon", floor: "floor_ember", key: "key_ember",
-    arena: { cx: 0.5, cy: 0.67, rx: 0.36, ry: 0.29 }, ambient: "embers", grade: "rgba(150,60,10,0.08)",
+    arena: { cx: 0.5, cy: 0.67, rx: 0.36, ry: 0.29 }, ambient: "embers", dust: "#e0c296", grade: "rgba(150,60,10,0.08)",
     hint: "The ground itself burns here. Red on the stone means move.",
-    duration: 90, rate: [0.85, 0.44], hpMul: 1.45, dmgMul: 1.3,
+    duration: 90, rate: [0.85, 0.42], hpMul: 1.7, dmgMul: 1.3,
     waves: [
       { t: 0, mix: [["imp", 1]] },
       { t: 18, mix: [["imp", 4], ["caster", 1]] },
@@ -109,9 +134,9 @@ export const REALMS = [
   },
   {
     id: "frost", numeral: "III", name: "The Frost Reach", floor: "floor_frost", key: "key_frost",
-    arena: { cx: 0.47, cy: 0.65, rx: 0.36, ry: 0.3 }, ambient: "snow", grade: "rgba(60,110,170,0.09)",
+    arena: { cx: 0.47, cy: 0.65, rx: 0.36, ry: 0.3 }, ambient: "snow", dust: "#eef6ff", grade: "rgba(60,110,170,0.09)",
     hint: "The Spire is close. What guards it does not walk — it arrives.",
-    duration: 100, rate: [0.8, 0.42], hpMul: 2.0, dmgMul: 1.6,
+    duration: 100, rate: [0.8, 0.4], hpMul: 2.35, dmgMul: 1.6,
     waves: [
       { t: 0, mix: [["wraith", 1]] },
       { t: 18, mix: [["wraith", 3], ["rimecaller", 1]] },
@@ -135,6 +160,8 @@ export const BOONS = [
   { id: "surge", icon: "✺︎", name: "Beacon Surge", desc: "Ultimate charges 25% faster", max: 3, apply: (p, k) => { p.ultMul += 0.25 * k; } },
   { id: "fleet", icon: "↯︎", name: "Fleetfoot", desc: "Dash recovers 18% sooner", max: 3, apply: (p, k) => { p.dashMul *= Math.pow(0.82, k); } },
   { id: "aegis", icon: "◈", name: "Stoneskin", desc: "Take 10% less damage", max: 4, apply: (p, k) => { p.armor = Math.min(0.6, p.armor + 0.1 * k); } },
+  { id: "flow", icon: "\u21BB", name: "Deep Channel", desc: "Abilities recharge 15% sooner", max: 3, apply: (p, k) => { p.abCd *= Math.pow(0.85, k); } },
+  { id: "overflow", icon: "\u2738\uFE0E", name: "Overflow", desc: "Abilities hit 22% harder", max: 4, apply: (p, k) => { p.abDmg += 0.22 * k; } },
   { id: "keen", icon: "✧︎", name: "Keen Edge", desc: "+12% chance to strike for double", max: 4, apply: (p, k) => { p.crit += 0.12 * k; } },
 ];
 
@@ -164,11 +191,17 @@ export const STR = {
   abandon: "Abandon ascent",
   howTo: "How to play",
   ctl: [
-    ["Move", "WASD or arrows · left stick · drag anywhere"],
-    ["Dash — a moment of invulnerability", "Space · A button · the Dash button"],
-    ["Ultimate — charges as you deal damage", "E or Q · X button · the Ult button"],
-    ["Pause", "Esc or P · Start"],
+    ["Move", "WASD or arrows \u00B7 left stick \u00B7 drag anywhere"],
+    ["Dash \u2014 two charges, a moment of invulnerability", "Space \u00B7 A button \u00B7 the Dash button"],
+    ["Abilities \u2014 the two you chose", "Q and E \u00B7 X and B buttons \u00B7 the ability buttons"],
+    ["Ultimate \u2014 charges as you deal damage", "R or F \u00B7 Y button \u00B7 the Ult button"],
+    ["Pause", "Esc or P \u00B7 Start"],
   ],
+  loadout: "Choose two abilities",
+  loadoutHint: "Tap to swap one in. You can master them as you climb.",
+  slot: "Slot",
+  recharge: "s recharge",
+  startRun: "Begin the ascent",
   ctlAuto: "Your champion attacks the nearest foe on their own. Red on the ground is about to hurt — step out of it.",
   sound: "Sound",
   shake: "Screen shake",

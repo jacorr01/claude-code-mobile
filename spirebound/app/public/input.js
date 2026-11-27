@@ -38,7 +38,9 @@ export class Input {
       if (e.code === "Escape" || e.code === "KeyP") this.onPause?.();
       if (this.mode !== "play") return;
       if (e.code === "Space" || e.code === "ShiftLeft" || e.code === "ShiftRight") this.g.input.dash = true;
-      else if (e.code === "KeyE" || e.code === "KeyQ" || e.code === "Enter") this.g.input.ult = true;
+      else if (e.code === "KeyQ") this.g.input.a1 = true;
+      else if (e.code === "KeyE") this.g.input.a2 = true;
+      else if (e.code === "KeyR" || e.code === "KeyF" || e.code === "Enter") this.g.input.ult = true;
     });
     addEventListener("keyup", (e) => this.keys.delete(e.code));
     addEventListener("blur", () => { this.release(); this.onBlur?.(); });
@@ -121,8 +123,8 @@ export class Input {
     let gp = null;
     for (const p of pads) if (p && p.connected) { gp = p; break; }
     if (gp) {
-      const a = this.pressed(gp, 0), b = this.pressed(gp, 1), x = this.pressed(gp, 2), rb = this.pressed(gp, 5), start = this.pressed(gp, 9);
-      if ((a || b || x || start) && this.onAny && this.onAny()) return;
+      const a = this.pressed(gp, 0), b = this.pressed(gp, 1), x = this.pressed(gp, 2), y = this.pressed(gp, 3), rb = this.pressed(gp, 5), start = this.pressed(gp, 9);
+      if ((a || b || x || y || start) && this.onAny && this.onAny()) return;
       if (this.mode === "choice") {
         if (x) this.onPick?.(0); else if (a) this.onPick?.(1); else if (b) this.onPick?.(2);
       } else {
@@ -135,7 +137,9 @@ export class Input {
           if (gp.buttons[12]?.pressed) my -= 1;
           if (gp.buttons[13]?.pressed) my += 1;
           if (a || rb) I.dash = true;
-          if (x || b) I.ult = true;
+          if (x) I.a1 = true;
+          if (b) I.a2 = true;
+          if (y) I.ult = true;
         }
       }
     }

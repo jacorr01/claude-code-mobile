@@ -41,8 +41,10 @@
       <div id="bossBar"><div id="bossName"></div><div class="bar boss"><i id="bossFill"></i></div></div>
       <div id="banner"><h2 id="bannerTitle"></h2><p id="bannerSub"></p></div>
       <div class="pads">
-        <button id="ultBtn" type="button" class="pad"><b data-t="ult"></b><kbd>E</kbd></button>
-        <button id="dashBtn" type="button" class="pad"><b data-t="dash"></b><kbd>Space</kbd></button>
+        <button id="ultBtn" type="button" class="pad ult" aria-label="Ultimate"><img alt="" /><kbd>R</kbd></button>
+        <button id="a1Btn" type="button" class="pad ab" aria-label="Ability 1"><img alt="" /><kbd>Q</kbd></button>
+        <button id="a2Btn" type="button" class="pad ab" aria-label="Ability 2"><img alt="" /><kbd>E</kbd></button>
+        <button id="dashBtn" type="button" class="pad dash" aria-label="Dash"><img src="/art/icons/dash.webp" alt="" /><span class="charges"><i></i><i></i></span><kbd>Space</kbd></button>
       </div>
     </div>
     <div id="stick"><i></i></div>
@@ -79,6 +81,27 @@
           <p data-t="chooseHint"></p>
         </header>
         <div id="heroes" class="heroes"></div>
+      </div>
+    </section>
+
+    <section id="scr-loadout" class="screen art">
+      <img class="bg dim" src="/art/key_title.jpg" alt="" />
+      <div class="veil heavy"></div>
+      <div class="lo-wrap">
+        <header>
+          <button id="btnLoadBack" type="button" class="link" data-t="back"></button>
+          <h2 id="loadName"></h2>
+          <p data-t="loadoutHint"></p>
+        </header>
+        <div class="lo-body">
+          <div class="lo-hero"><img id="loadPic" alt="" /></div>
+          <div class="lo-side">
+            <h3 data-t="loadout"></h3>
+            <div id="abList" class="ab-list"></div>
+            <div id="kitList" class="kit-list"></div>
+            <button id="btnStart" type="button" class="btn primary" data-t="startRun"></button>
+          </div>
+        </div>
       </div>
     </section>
 

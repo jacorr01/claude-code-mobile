@@ -24,3 +24,9 @@ sfx_shot,hero attack,audio,1s,-,-,generate
 sfx_levelup,level up,audio,2s,-,-,generate
 sfx_roar,boss entrance,audio,3s,-,-,generate
 sfx_dash,dash,audio,1s,-,-,generate
+pose_{hero}_run,key pose for the run animation (x3 heroes),sprite,"mid-stride pose generated from the hero sprite, padded onto a clean key background",1:1 1k,STYLE FORMULA v1,generate + hero sprite
+pose_{hero}_atk,key pose for the attack animation (x3 heroes),sprite,wind-up or firing stance generated from the hero sprite,1:1 1k,STYLE FORMULA v1,generate + hero sprite
+anim_{hero}_run,"run cycle sprite sheet (x3 heroes), public/art/anim",spritesheet,"4 s clip of the key pose running in place, one stride cycle cut to 12-16 frames",300px cells,from key pose,generate (video) + key pose
+anim_warden_atk,"melee swing sprite sheet, public/art/anim",spritesheet,"4 s clip of the swing, 10 frames around the strike",300px cells,from key pose,generate (video) + key pose
+anim_{gunner|knight}_atk,"firing / casting stance, public/art/anim",sprite,the attack key pose used as a single-frame stance,300px,from key pose,pose_{hero}_atk
+icons,"16 ability icons, public/art/icons",ui,"one 4x4 sheet of ability, ultimate and dash icons, sliced to 128px tiles",1:1 2k,STYLE FORMULA v1,generate
