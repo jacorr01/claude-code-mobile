@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Spirebound</title>
+    <meta name="description" content="Pick a champion and fight through three realms to claim the Spire. A fast action roguelite for phone, keyboard or gamepad." />
+    <meta property="og:title" content="Spirebound" />
+    <meta property="og:description" content="Pick a champion and fight through three realms to claim the Spire. A fast action roguelite for phone, keyboard or gamepad." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://jacorr01.github.io/claude-code-mobile/cover.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#06080b" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2306080b'/%3E%3Cpath d='M32 4v56' stroke='%2386e6ff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M22 58l4-34h12l4 34z' fill='%23283642' stroke='%2386e6ff' stroke-width='2'/%3E%3C/svg%3E" />
+    <link rel="preload" href="fonts/Cinzel.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas id="cv" aria-label="Spirebound game view"></canvas>
+    <canvas id="gl" aria-hidden="true"></canvas>
+    <canvas id="fx" aria-hidden="true"></canvas>
+
+    <div id="hud">
+      <div class="hud-top">
+        <div class="vitals">
+          <div class="portrait"><img id="hudPortrait" alt="" /></div>
+          <div class="bars">
+            <div class="bar hp"><i id="hpFill"></i><span id="hpText"></span></div>
+            <div class="bar xp"><i id="xpFill"></i></div>
+            <div class="lvl" id="lvlText"></div>
+          </div>
+        </div>
+        <div class="realm">
+          <div id="realmName"></div>
+          <div class="bar wave"><i id="waveFill"></i></div>
+          <div class="sub" id="realmSub"></div>
+        </div>
+        <div class="right">
+          <div id="scoreText">0</div>
+          <button id="pauseBtn" type="button" aria-label="Pause"><span></span><span></span></button>
+        </div>
+      </div>
+      <div id="bossBar"><div id="bossName"></div><div class="bar boss"><i id="bossFill"></i></div></div>
+      <div id="banner"><h2 id="bannerTitle"></h2><p id="bannerSub"></p></div>
+      <div id="combo"><b id="comboN"></b><span data-t="streak"></span><i id="comboBar"></i></div>
+      <div class="pads">
+        <button id="ultBtn" type="button" class="pad ult" aria-label="Ultimate"><img alt="" /><kbd>R</kbd></button>
+        <button id="a1Btn" type="button" class="pad ab" aria-label="Ability 1"><img alt="" /><kbd>Q</kbd></button>
+        <button id="a2Btn" type="button" class="pad ab" aria-label="Ability 2"><img alt="" /><kbd>E</kbd></button>
+        <button id="dashBtn" type="button" class="pad dash" aria-label="Dash"><img src="art/icons/dash.webp" alt="" /><span class="charges"><i></i><i></i></span><kbd>Space</kbd></button>
+      </div>
+    </div>
+    <div id="stick"><i></i></div>
+
+    <section id="scr-load" class="screen show">
+      <div class="load">
+        <h1 data-t="title"></h1>
+        <p data-t="loading"></p>
+        <div class="bar"><i id="loadFill"></i></div>
+      </div>
+    </section>
+
+    <section id="scr-title" class="screen art">
+      <img class="bg" src="art/key_title.jpg" alt="" />
+      <div class="veil"></div>
+      <div class="title-box">
+        <h1 data-t="title"></h1>
+        <p class="tag" data-t="tagline"></p>
+        <div class="row">
+          <button id="btnBegin" type="button" class="btn primary" data-t="begin"></button>
+          <button id="btnHall" type="button" class="btn" data-t="hall"></button>
+        </div>
+        <button id="btnSound" type="button" class="link"></button>
+      </div>
+    </section>
+
+    <section id="scr-hero" class="screen art">
+      <img class="bg dim" src="art/key_title.jpg" alt="" />
+      <div class="veil heavy"></div>
+      <div class="hero-wrap">
+        <header>
+          <button id="btnHeroBack" type="button" class="link" data-t="back"></button>
+          <h2 data-t="chooseHero"></h2>
+          <p data-t="chooseHint"></p>
+        </header>
+        <div id="heroes" class="heroes"></div>
+      </div>
+    </section>
+
+    <section id="scr-loadout" class="screen art">
+      <img class="bg dim" src="art/key_title.jpg" alt="" />
+      <div class="veil heavy"></div>
+      <div class="lo-wrap">
+        <header>
+          <button id="btnLoadBack" type="button" class="link" data-t="back"></button>
+          <h2 id="loadName"></h2>
+          <p data-t="loadoutHint"></p>
+        </header>
+        <div class="lo-body">
+          <div class="lo-hero"><img id="loadPic" alt="" /></div>
+          <div class="lo-side">
+            <h3 data-t="loadout"></h3>
+            <div id="abList" class="ab-list"></div>
+            <div id="kitList" class="kit-list"></div>
+            <button id="btnStart" type="button" class="btn primary" data-t="startRun"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scr-realm" class="screen art">
+      <img class="bg" id="realmArt" alt="" />
+      <div class="veil"></div>
+      <div class="realm-box">
+        <p class="eyebrow" id="realmNum"></p>
+        <h2 id="realmTitle"></h2>
+        <p class="hint" id="realmHint"></p>
+        <p class="enter" data-t="enter"></p>
+      </div>
+    </section>
+
+    <section id="scr-end" class="screen art">
+      <img class="bg dim" id="endArt" alt="" />
+      <div class="veil heavy"></div>
+      <div class="panel end">
+        <h2 id="endTitle"></h2>
+        <p class="sub" id="endSub"></p>
+        <dl id="endStats" class="stats"></dl>
+        <p class="note" id="endNote"></p>
+        <h3 data-t="hall"></h3>
+        <ol class="hall-list"></ol>
+        <div class="row">
+          <button id="btnAgain" type="button" class="btn primary" data-t="again"></button>
+          <button id="btnChange" type="button" class="btn" data-t="changeHero"></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="scr-choice" class="screen overlay">
+      <div class="choice">
+        <h2 id="choiceTitle"></h2>
+        <p id="choiceHint"></p>
+        <div id="choiceCards" class="cards"></div>
+      </div>
+    </section>
+
+    <section id="scr-pause" class="screen overlay">
+      <div class="panel">
+        <h2 data-t="paused"></h2>
+        <div class="row">
+          <button id="btnResume" type="button" class="btn primary" data-t="resume"></button>
+        </div>
+        <div class="toggles">
+          <button id="tglSound" type="button" class="btn small"></button>
+          <button id="tglShake" type="button" class="btn small"></button>
+        </div>
+        <h3 data-t="howTo"></h3>
+        <p class="note" data-t="ctlAuto"></p>
+        <dl id="ctlList" class="ctl"></dl>
+        <button id="btnAbandon" type="button" class="link danger" data-t="abandon"></button>
+      </div>
+    </section>
+
+    <section id="scr-hall" class="screen overlay">
+      <div class="panel">
+        <h2 data-t="hall"></h2>
+        <ol class="hall-list"></ol>
+        <form id="nameForm" class="name">
+          <label for="nameInput" data-t="yourName"></label>
+          <input id="nameInput" maxlength="16" autocomplete="nickname" spellcheck="false" />
+          <button type="submit" class="btn small" id="btnName" data-t="save"></button>
+        </form>
+        <p class="note" data-t="hallNote"></p>
+        <div class="row">
+          <button id="btnCopy" type="button" class="btn small" data-t="copyLink"></button>
+          <button id="btnHallClose" type="button" class="btn small primary" data-t="close"></button>
+        </div>
+      </div>
+    </section>
+
+    <script>window.SPIRE_STANDALONE = true;</script>
+    <script type="module" src="client.js"></script>
+  </body>
+</html>
