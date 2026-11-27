@@ -55,7 +55,7 @@ function loadImage(src) {
 }
 async function loadArt(id, ext) {
   if (art[id]) return;
-  const img = await loadImage(`/art/${id}.${ext}`);
+  const img = await loadImage(`art/${id}.${ext}`);
   art[id] = { id, img, aspect: img.naturalWidth / img.naturalHeight };
 }
 const loadFloor = (id) => loadArt(id, "jpg").catch(() => {});
@@ -166,7 +166,7 @@ function buildHeroes() {
     card.style.setProperty("--c", h.color);
     const pic = el("div", "pic");
     const img = el("img");
-    img.src = `/art/${h.sprite}.webp`;
+    img.src = `art/${h.sprite}.webp`;
     img.alt = h.name;
     pic.append(img);
     const title = el("h3", "", h.name);
@@ -218,7 +218,25 @@ function playerId() {
 
 const PING = "__ping", PONG = "__pong";
 const room = hallRoom();
-const net = { ws: null, retry: 0, view: null, seated: false, onRun: null, lastN: -1 };
+const net = { ws: null, local: null, retry: 0, view: null, seated: false, onRun: null, lastN: -1 };
+
+/** One frame from the hall, whether it came over the socket or from this browser. */
+function onState(msg) {
+  if (msg.type !== "state" || !msg.view) return;
+  const first = net.view === null;
+  net.view = msg.view;
+  net.seated = msg.status === "playing" && Array.isArray(msg.seats) && msg.seats.includes(msg.you);
+  const r = msg.view.run;
+  if (first) {
+    net.lastN = r ? r.n : 0;
+    const mine = store.get("spire:name", "");
+    if (net.seated && NAME_RE.test(mine) && mine !== msg.view.name) act({ type: "name", name: mine });
+  } else if (r && r.n !== net.lastN) {
+    net.lastN = r.n;
+    if (net.onRun) net.onRun(r);
+  }
+  renderHall();
+}
 
 function connect() {
   let ws;
@@ -236,20 +254,7 @@ function connect() {
     if (event.data === PONG) return;
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
-    if (msg.type !== "state" || !msg.view) return;
-    const first = net.view === null;
-    net.view = msg.view;
-    net.seated = msg.status === "playing" && Array.isArray(msg.seats) && msg.seats.includes(msg.you);
-    const r = msg.view.run;
-    if (first) {
-      net.lastN = r ? r.n : 0;
-      const mine = store.get("spire:name", "");
-      if (net.seated && NAME_RE.test(mine) && mine !== msg.view.name) act({ type: "name", name: mine });
-    } else if (r && r.n !== net.lastN) {
-      net.lastN = r.n;
-      if (net.onRun) net.onRun(r);
-    }
-    renderHall();
+    onState(msg);
   });
   ws.addEventListener("close", () => {
     net.seated = false;
@@ -258,10 +263,34 @@ function connect() {
   });
   ws.addEventListener("error", () => { /* close follows */ });
 }
+
+/**
+ * A standalone copy of the game has no room to talk to, so it keeps the hall in
+ * this browser instead, run by the very same rules the room uses.
+ */
+async function connectLocal() {
+  const logic = await import("./logic.js");
+  const me = playerId();
+  let state = null;
+  try { state = JSON.parse(store.get("spire:localhall", "null")); } catch { /* start a fresh hall */ }
+  if (!state || typeof state !== "object" || !Array.isArray(state.hall) || !state.runs || !state.names) {
+    state = logic.setup([me]);
+  }
+  // The rules deal seeds from a fixed stream; stir the clock in so no two visits match.
+  state.seed = ((state.seed ^ Date.now()) >>> 0) || 1;
+  const deliver = () => onState({ type: "state", status: "playing", seats: [me], you: me, view: logic.viewFor(state, me) });
+  net.local = (action) => {
+    if (!logic.validateAction(state, me, action).ok) return;
+    state = logic.applyAction(state, me, action);
+    store.set("spire:localhall", JSON.stringify(state));
+    deliver();
+  };
+  deliver();
+}
 function send(msg) {
   if (net.ws && net.ws.readyState === WebSocket.OPEN) net.ws.send(JSON.stringify(msg));
 }
-const act = (action) => send({ type: "action", action });
+const act = (action) => (net.local ? net.local(action) : send({ type: "action", action }));
 setInterval(() => {
   if (net.ws && net.ws.readyState === WebSocket.OPEN) net.ws.send(PING);
 }, 30000);
@@ -300,7 +329,7 @@ function savedLoadout(heroId) {
 }
 function iconImg(id, cls) {
   const img = el("img", cls || "");
-  img.src = `/art/icons/${id}.webp`;
+  img.src = `art/icons/${id}.webp`;
   img.alt = "";
   return img;
 }
@@ -335,7 +364,7 @@ function openLoadout(heroId) {
   lo.picks = savedLoadout(heroId);
   $("#scr-loadout").style.setProperty("--c", h.color);
   $("#loadName").textContent = h.name;
-  $("#loadPic").src = `/art/${h.sprite}.webp`;
+  $("#loadPic").src = `art/${h.sprite}.webp`;
   const kit = $("#kitList");
   kit.textContent = "";
   for (const [icon, name, note] of [["dash", STR.dash, h.dashNote], [h.ult.id, h.ult.name, h.ultNote]]) {
@@ -364,12 +393,12 @@ function startRun(heroId, loadout) {
     mine.ranked = ranked;
     net.onRun = null;
     const h = HEROES[heroId];
-    $("#hudPortrait").src = `/art/${h.sprite}.webp`;
+    $("#hudPortrait").src = `art/${h.sprite}.webp`;
     $("#hud").style.setProperty("--hero", h.color);
     for (const id of ["dashBtn", "a1Btn", "a2Btn"]) $("#" + id).style.setProperty("--c", h.color);
-    $("#a1Btn img").src = `/art/icons/${picks[0]}.webp`;
-    $("#a2Btn img").src = `/art/icons/${picks[1]}.webp`;
-    $("#ultBtn img").src = `/art/icons/${h.ult.id}.webp`;
+    $("#a1Btn img").src = `art/icons/${picks[0]}.webp`;
+    $("#a2Btn img").src = `art/icons/${picks[1]}.webp`;
+    $("#ultBtn img").src = `art/icons/${h.ult.id}.webp`;
     game.start(heroId, seed, picks);
     if (DEV.realm) game.beginRealm(DEV.realm);
   };
@@ -387,7 +416,7 @@ handlers.realm = ({ index }) => {
   input.release();
   hudOn(false);
   overlay("choice", false);
-  $("#realmArt").src = `/art/${r.key}.jpg`;
+  $("#realmArt").src = `art/${r.key}.jpg`;
   $("#realmNum").textContent = `${STR.realm} ${r.numeral}`;
   $("#realmTitle").textContent = r.name;
   $("#realmHint").textContent = r.hint;
@@ -498,7 +527,7 @@ function showEnd(won) {
   hudOn(false);
   overlay("choice", false);
   overlay("pause", false);
-  $("#endArt").src = `/art/${won ? "key_title" : r.key}.jpg`;
+  $("#endArt").src = `art/${won ? "key_title" : r.key}.jpg`;
   $("#endTitle").textContent = won ? STR.won : STR.fell;
   $("#endSub").textContent = won ? STR.wonSub : STR.fellIn.replace("{realm}", r.name);
   const stats = $("#endStats");
@@ -677,13 +706,17 @@ async function boot() {
   for (const e of Object.values(ENEMIES)) sprites.add(e.sprite);
   for (const b of Object.values(BOSSES)) sprites.add(b.sprite);
   const jobs = [...sprites].map((id) => loadArt(id, "webp").catch(() => {}));
-  jobs.push(loadFloor(REALMS[0].floor), loadImage("/art/key_title.jpg").catch(() => {}));
+  jobs.push(loadFloor(REALMS[0].floor), loadImage("art/key_title.jpg").catch(() => {}));
   for (const [hero, acts] of Object.entries(ANIMS)) for (const [act, meta] of Object.entries(acts)) jobs.push(loadAnim(hero, act, meta).catch(() => {}));
   let done = 0;
   const fill = $("#loadFill");
   await Promise.all(jobs.map((j) => j.then(() => { done++; fill.style.width = `${(done / jobs.length) * 100}%`; })));
   show("title");
-  connect();
+  if (window.SPIRE_STANDALONE) {
+    $("#btnCopy").hidden = true;
+    $('[data-t="hallNote"]').textContent = STR.hallNoteLocal;
+    connectLocal().catch(() => { /* play on unranked */ });
+  } else connect();
   if (DEV.auto) startRun(HEROES[DEV.hero] ? DEV.hero : "gunner", DEV.ab.length === 2 ? DEV.ab : null);
 }
 

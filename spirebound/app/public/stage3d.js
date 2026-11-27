@@ -8,7 +8,7 @@
  * PITCH looks at it. That makes a ground point land on exactly the same screen
  * pixel the 2D layers use, so models, floor decals and projectiles line up.
  */
-import * as THREE from "three";
+import * as THREE from "./vendor/three.module.min.js";
 import { GLTFLoader } from "./vendor/jsm/loaders/GLTFLoader.js";
 import { clone as cloneRig } from "./vendor/jsm/utils/SkeletonUtils.js";
 
@@ -116,7 +116,7 @@ export class Stage3D {
    */
   async load(id, url, o = {}) {
     if (!this.ok || this.models[id]) return;
-    const g = await this.loader.loadAsync(url);
+    const g = url.endsWith(".txt") ? await this.loadPacked(url) : await this.loader.loadAsync(url);
     const root = g.scene;
     root.traverse((n) => {
       if (!n.isMesh) return;
@@ -131,6 +131,31 @@ export class Stage3D {
     const names = o.names || ["Move"];
     g.animations.forEach((c, i) => { c.name = names[i] || c.name; });
     this.models[id] = { root, clips: g.animations, h: Math.max(1e-3, box.max.y - box.min.y), minY: box.min.y, yaw: o.yaw || 0, first: names[0] };
+  }
+
+  /**
+   * A model packed as base64 text, for hosts that serve no binary model files.
+   * Such hosts usually also forbid fetching blob: URLs, which is how the loader
+   * decodes textures when createImageBitmap exists, so it is hidden while the
+   * parser is built and the loader falls back to plain image elements.
+   */
+  async loadPacked(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`model ${url}: ${res.status}`);
+    const text = atob((await res.text()).trim());
+    const bytes = new Uint8Array(text.length);
+    for (let i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
+    return new Promise((ok, fail) => {
+      const bitmap = self.createImageBitmap;
+      self.createImageBitmap = undefined;
+      try {
+        this.loader.parse(bytes.buffer, "", ok, fail);
+      } catch (e) {
+        fail(e);
+      } finally {
+        self.createImageBitmap = bitmap;
+      }
+    });
   }
 
   inst(key, id) {

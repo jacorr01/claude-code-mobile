@@ -8,7 +8,7 @@
 export const ANIMS = {
   "gunner": {
     "run": {
-      "src": "/art/anim/gunner_run.webp",
+      "src": "art/anim/gunner_run.webp",
       "cols": 4,
       "rows": 4,
       "n": 14,
@@ -19,7 +19,7 @@ export const ANIMS = {
       "lead": 2
     },
     "atk": {
-      "src": "/art/anim/gunner_atk.webp",
+      "src": "art/anim/gunner_atk.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -30,7 +30,7 @@ export const ANIMS = {
       "lead": 0
     },
     "rundown": {
-      "src": "/art/anim/gunner_rundown.webp",
+      "src": "art/anim/gunner_rundown.webp",
       "cols": 4,
       "rows": 4,
       "n": 16,
@@ -41,7 +41,7 @@ export const ANIMS = {
       "lead": 3
     },
     "runup": {
-      "src": "/art/anim/gunner_runup.webp",
+      "src": "art/anim/gunner_runup.webp",
       "cols": 4,
       "rows": 3,
       "n": 12,
@@ -52,7 +52,7 @@ export const ANIMS = {
       "lead": 4
     },
     "idledown": {
-      "src": "/art/anim/gunner_idledown.webp",
+      "src": "art/anim/gunner_idledown.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -63,7 +63,7 @@ export const ANIMS = {
       "lead": 0
     },
     "idleup": {
-      "src": "/art/anim/gunner_idleup.webp",
+      "src": "art/anim/gunner_idleup.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -76,7 +76,7 @@ export const ANIMS = {
   },
   "knight": {
     "run": {
-      "src": "/art/anim/knight_run.webp",
+      "src": "art/anim/knight_run.webp",
       "cols": 4,
       "rows": 3,
       "n": 12,
@@ -87,7 +87,7 @@ export const ANIMS = {
       "lead": 3
     },
     "atk": {
-      "src": "/art/anim/knight_atk.webp",
+      "src": "art/anim/knight_atk.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -98,7 +98,7 @@ export const ANIMS = {
       "lead": 0
     },
     "rundown": {
-      "src": "/art/anim/knight_rundown.webp",
+      "src": "art/anim/knight_rundown.webp",
       "cols": 4,
       "rows": 4,
       "n": 13,
@@ -109,7 +109,7 @@ export const ANIMS = {
       "lead": 4
     },
     "runup": {
-      "src": "/art/anim/knight_runup.webp",
+      "src": "art/anim/knight_runup.webp",
       "cols": 4,
       "rows": 4,
       "n": 16,
@@ -120,7 +120,7 @@ export const ANIMS = {
       "lead": 12
     },
     "idledown": {
-      "src": "/art/anim/knight_idledown.webp",
+      "src": "art/anim/knight_idledown.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -131,7 +131,7 @@ export const ANIMS = {
       "lead": 0
     },
     "idleup": {
-      "src": "/art/anim/knight_idleup.webp",
+      "src": "art/anim/knight_idleup.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -144,7 +144,7 @@ export const ANIMS = {
   },
   "warden": {
     "run": {
-      "src": "/art/anim/warden_run.webp",
+      "src": "art/anim/warden_run.webp",
       "cols": 4,
       "rows": 4,
       "n": 16,
@@ -155,7 +155,7 @@ export const ANIMS = {
       "lead": 8
     },
     "atk": {
-      "src": "/art/anim/warden_atk.webp",
+      "src": "art/anim/warden_atk.webp",
       "cols": 4,
       "rows": 3,
       "n": 10,
@@ -166,7 +166,7 @@ export const ANIMS = {
       "lead": 8
     },
     "rundown": {
-      "src": "/art/anim/warden_rundown.webp",
+      "src": "art/anim/warden_rundown.webp",
       "cols": 4,
       "rows": 4,
       "n": 16,
@@ -177,7 +177,7 @@ export const ANIMS = {
       "lead": 10
     },
     "runup": {
-      "src": "/art/anim/warden_runup.webp",
+      "src": "art/anim/warden_runup.webp",
       "cols": 4,
       "rows": 4,
       "n": 16,
@@ -188,7 +188,7 @@ export const ANIMS = {
       "lead": 8
     },
     "idledown": {
-      "src": "/art/anim/warden_idledown.webp",
+      "src": "art/anim/warden_idledown.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,
@@ -199,7 +199,7 @@ export const ANIMS = {
       "lead": 0
     },
     "idleup": {
-      "src": "/art/anim/warden_idleup.webp",
+      "src": "art/anim/warden_idleup.webp",
       "cols": 1,
       "rows": 1,
       "n": 1,

@@ -2,7 +2,7 @@
  * Sound: one looping battle track and a handful of one-shots, mixed through a
  * limiter so stacked hits never clip. Nothing plays before the first gesture.
  */
-const FILES = { music: "/audio/music.mp3", hit: "/audio/hit.mp3", shot: "/audio/shot.mp3", levelup: "/audio/levelup.mp3", roar: "/audio/roar.mp3", dash: "/audio/dash.mp3" };
+const FILES = { music: "audio/music.mp3", hit: "audio/hit.mp3", shot: "audio/shot.mp3", levelup: "audio/levelup.mp3", roar: "audio/roar.mp3", dash: "audio/dash.mp3" };
 /** Sounds without their own file reuse one, re-pitched. [file, rate, gain] */
 const ALIAS = { hurt: ["hit", 0.55, 1.2], ult: ["levelup", 0.6, 1], boom: ["hit", 0.45, 1.3], pick: ["dash", 1.6, 0.6] };
 const MIN_GAP = { hit: 0.06, shot: 0.07, hurt: 0.15, boom: 0.12 };

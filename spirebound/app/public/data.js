@@ -222,6 +222,7 @@ export const STR = {
   changeHero: "Change champion",
   hallEmpty: "No ascents recorded yet. Be the first name on the wall.",
   hallNote: "Share this hall's link and your friends' ascents appear on the same wall.",
+  hallNoteLocal: "This hall is kept in this browser and remembers your own best ascents.",
   copyLink: "Copy hall link",
   copied: "Link copied",
   yourName: "Your name",

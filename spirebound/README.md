@@ -57,6 +57,14 @@ The fight runs on the player's device; the room deals each run's seed and is the
 authority on progress and scores, so the client cannot post a run it did not
 plausibly play.
 
+## Standalone copy
+
+`python3 tools/export-static.py <out-dir>` writes a copy of the game that needs
+no room server: one page plus its assets, all on relative paths, for any static
+host. That copy keeps its Hall of Ascents in the browser, running the same
+`logic.js` rules locally, and carries its models as base64 text for hosts that
+serve only common web file types.
+
 ## Develop
 
 ```bash
