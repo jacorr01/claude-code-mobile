@@ -16,6 +16,8 @@ export const TUNE = {
   decel: 4400,
   contactInv: 0.45,
   heartChance: 0.022,
+  eliteChance: 0.07,
+  comboTime: 3,
   heartHeal: 0.15,
   maxEnemies: 110,
   hitStop: 0.04,
@@ -34,21 +36,21 @@ export const HERO_ORDER = ["warden", "gunner", "knight"];
 export const HEROES = {
   warden: {
     id: "warden", name: "Rootwarden", role: "Bulwark", sprite: "hero_warden", h: 122, color: "#8dff5c",
-    hp: 175, speed: 205, dashCd: 2.3, runRate: 1.35,
-    abilities: ["charge", "snare", "bark", "totem"],
-    stats: { Vigor: 5, Might: 4, Reach: 2, Haste: 2 },
-    attack: { kind: "cleave", dmg: 34, cd: 0.56, range: 150, arc: 2.3, knock: 170 },
+    hp: 235, speed: 222, dashCd: 2.1, runRate: 1.45, armor: 0.18,
+    abilities: ["charge", "snare", "bark", "totem"], model: { atkOnce: true, run: 0.8 },
+    stats: { Vigor: 5, Might: 5, Reach: 2, Haste: 3 },
+    attack: { kind: "cleave", dmg: 46, cd: 0.5, range: 178, arc: 2.9, knock: 210, slamEvery: 3, mend: 0.6 },
     ult: { id: "quake", name: "Thornquake" },
-    blurb: "An old guardian of the ruins. Wades in, sweeps wide, and refuses to fall.",
+    blurb: "An old guardian of the ruins. Sweeps wide, slams the ground every third swing, and mends as he strikes.",
     dashNote: "Shield bash — dashing through foes wounds them.",
     ultNote: "Roots erupt around you: heavy damage, stun, and you mend.",
   },
   gunner: {
     id: "gunner", name: "Emberline", role: "Marksman", sprite: "hero_gunner", h: 108, color: "#5cc0ff",
     hp: 105, speed: 245, dashCd: 1.5, runRate: 1.7,
-    abilities: ["scatter", "grenade", "sentry", "rocketjump"],
+    abilities: ["scatter", "grenade", "sentry", "rocketjump"], model: { atkOnce: false, run: 1 },
     stats: { Vigor: 2, Might: 4, Reach: 5, Haste: 5 },
-    attack: { kind: "bolt", dmg: 16, cd: 0.27, speed: 860, range: 520, r: 7 },
+    attack: { kind: "bolt", dmg: 16, cd: 0.27, speed: 860, range: 480, r: 7 },
     ult: { id: "overcharge", name: "Overcharge" },
     blurb: "A dragon-hunter with a cannon for an arm. Fragile, fast, and never out of range.",
     dashNote: "Quick roll — the fastest dash recovery of the three.",
@@ -56,12 +58,12 @@ export const HEROES = {
   },
   knight: {
     id: "knight", name: "Frostcrown", role: "Controller", sprite: "hero_knight", h: 110, color: "#7ff3ff",
-    hp: 130, speed: 230, dashCd: 1.9, runRate: 1.6,
-    abilities: ["spike", "nova", "blizzard", "blink"],
-    stats: { Vigor: 3, Might: 3, Reach: 4, Haste: 3 },
-    attack: { kind: "shards", dmg: 11, cd: 0.5, count: 3, spread: 0.2, speed: 640, range: 410, r: 8, slow: 1.4 },
+    hp: 165, speed: 236, dashCd: 1.8, runRate: 1.6, armor: 0.08,
+    abilities: ["spike", "nova", "blizzard", "blink"], model: { atkOnce: false, run: 1 },
+    stats: { Vigor: 4, Might: 4, Reach: 4, Haste: 3 },
+    attack: { kind: "shards", dmg: 15, cd: 0.46, count: 4, spread: 0.17, speed: 680, range: 430, r: 8, slow: 1.6, pierce: 1 },
     ult: { id: "whiteout", name: "Whiteout" },
-    blurb: "Heir to the ice spire. Fans of frost shards slow everything they touch.",
+    blurb: "Heir to the ice spire. Fans of piercing frost shards slow everything they pass through.",
     dashNote: "Ice slide — a burst of frost chills foes where you stop.",
     ultNote: "Freezes every foe in sight. Frozen foes take half again as much damage.",
   },
@@ -73,18 +75,18 @@ export const HEROES = {
  * game.js (castAbility), since each one is its own small mechanic.
  */
 export const ABILITIES = {
-  charge: { name: "Bramble Charge", tag: "Mobility", cd: 7, desc: "Thunder forward a long way, trampling and stunning everything in the path." },
+  charge: { name: "Bramble Charge", tag: "Mobility", cd: 7, desc: "Thunder forward a long way, trampling everything in a wide path and erupting where you stop." },
   snare: { name: "Root Snare", tag: "Control", cd: 9, desc: "Roots burst in a wide fan ahead, wounding foes and holding them fast." },
-  bark: { name: "Ironbark", tag: "Defence", cd: 14, desc: "For 4.5 seconds take 70% less damage and wound whatever strikes you." },
+  bark: { name: "Ironbark", tag: "Defence", cd: 13, desc: "A burst of thorns around you, then 4.5 seconds of taking 70% less damage and wounding whatever strikes you." },
   totem: { name: "Heartwood Totem", tag: "Area", cd: 16, desc: "Plant a totem that pulses for 7 seconds, hurting foes and mending you." },
   scatter: { name: "Scatter Blast", tag: "Burst", cd: 5, desc: "A point-blank fan of nine bolts that hurls foes back and kicks you clear." },
-  grenade: { name: "Cinder Grenade", tag: "Area", cd: 8, desc: "Lob a charge at the thickest pack. A big blast that leaves the ground burning." },
-  sentry: { name: "Sentry Drone", tag: "Summon", cd: 15, desc: "Deploy a drone that picks its own targets for 9 seconds." },
+  grenade: { name: "Cluster Grenade", tag: "Area", cd: 8, desc: "Lob a charge at the thickest pack. A huge blast, five follow-up bursts, and burning ground." },
+  sentry: { name: "Sentry Drone", tag: "Summon", cd: 15, desc: "Deploy a drone that picks its own targets for 9 seconds. Its shots burst on impact." },
   rocketjump: { name: "Rocket Jump", tag: "Mobility", cd: 8, desc: "Blast off the ground: scorch where you stood, sail over everything, land hard." },
-  spike: { name: "Glacial Spikes", tag: "Burst", cd: 6, desc: "A line of ice erupts ahead, piercing foes and freezing them solid." },
+  spike: { name: "Glacial Spikes", tag: "Burst", cd: 6, desc: "Three lines of ice erupt in a fan ahead, piercing foes and freezing them solid." },
   nova: { name: "Frost Nova", tag: "Control", cd: 10, desc: "A ring of frost bursts from you, freezing everything close by." },
   blizzard: { name: "Blizzard", tag: "Area", cd: 14, desc: "Call a 6 second storm onto the thickest pack: it slows and shreds." },
-  blink: { name: "Rime Step", tag: "Mobility", cd: 7, desc: "Vanish and reappear a long way off, leaving an ice mirror that shatters." },
+  blink: { name: "Rime Step", tag: "Mobility", cd: 7, desc: "Vanish and reappear in a burst of frost, leaving an ice mirror that shatters." },
 };
 
 export const ENEMIES = {
@@ -101,14 +103,14 @@ export const ENEMIES = {
 
 export const BOSSES = {
   colossus: { name: "Thorn Colossus", title: "Heart of the Ruins", sprite: "boss_colossus", h: 330, r: 70, hp: 3400, speed: 60, dmg: 26, score: 3000, xp: 30, keep: 230, patterns: ["slam", "thorns", "summon"], minion: "spearman" },
-  dragon: { name: "Cinderwing", title: "Tyrant of the Canyon", sprite: "boss_dragon", h: 340, r: 86, hp: 5400, speed: 76, dmg: 32, score: 5000, xp: 40, keep: 320, patterns: ["breath", "rain", "gust"], minion: "imp" },
+  dragon: { name: "Cinderwing", title: "Tyrant of the Canyon", sprite: "boss_dragon", h: 340, m3: 0.66, r: 86, hp: 5400, speed: 76, dmg: 32, score: 5000, xp: 40, keep: 320, patterns: ["breath", "rain", "gust"], minion: "imp" },
   king: { name: "The Hollow King", title: "Warden of the Spire", sprite: "boss_king", h: 330, r: 66, hp: 7600, speed: 88, dmg: 38, score: 8000, xp: 50, keep: 260, patterns: ["beams", "rings", "blink", "summon"], minion: "wraith" },
 };
 
 export const REALMS = [
   {
     id: "verdant", numeral: "I", name: "The Verdant Ruins", floor: "floor_verdant", key: "key_verdant",
-    arena: { cx: 0.48, cy: 0.6, rx: 0.4, ry: 0.33 }, ambient: "leaves", dust: "#c3c9ad", grade: "rgba(60,110,50,0.08)",
+    arena: { cx: 0.48, cy: 0.6, rx: 0.4, ry: 0.33 }, ambient: "leaves", dust: "#c3c9ad", fog: "120,160,110", light: ["#eef6e6", "#fff1d0", "#a6ffb4"], grade: "rgba(60,110,50,0.08)",
     hint: "The Crimson Legion holds the old stones. Keep moving — your champion strikes on their own.",
     duration: 80, rate: [1.0, 0.5], hpMul: 1.12, dmgMul: 1,
     waves: [
@@ -121,7 +123,7 @@ export const REALMS = [
   },
   {
     id: "ember", numeral: "II", name: "The Ember Canyon", floor: "floor_ember", key: "key_ember",
-    arena: { cx: 0.5, cy: 0.67, rx: 0.36, ry: 0.29 }, ambient: "embers", dust: "#e0c296", grade: "rgba(150,60,10,0.08)",
+    arena: { cx: 0.5, cy: 0.67, rx: 0.36, ry: 0.29 }, ambient: "embers", dust: "#e0c296", fog: "200,120,70", light: ["#ffe6cc", "#ffcf99", "#ff8a4a"], grade: "rgba(150,60,10,0.08)",
     hint: "The ground itself burns here. Red on the stone means move.",
     duration: 90, rate: [0.85, 0.42], hpMul: 1.7, dmgMul: 1.3,
     waves: [
@@ -134,7 +136,7 @@ export const REALMS = [
   },
   {
     id: "frost", numeral: "III", name: "The Frost Reach", floor: "floor_frost", key: "key_frost",
-    arena: { cx: 0.47, cy: 0.65, rx: 0.36, ry: 0.3 }, ambient: "snow", dust: "#eef6ff", grade: "rgba(60,110,170,0.09)",
+    arena: { cx: 0.47, cy: 0.65, rx: 0.36, ry: 0.3 }, ambient: "snow", dust: "#eef6ff", fog: "150,190,230", light: ["#e2efff", "#eaf3ff", "#8fd6ff"], grade: "rgba(60,110,170,0.09)",
     hint: "The Spire is close. What guards it does not walk — it arrives.",
     duration: 100, rate: [0.8, 0.4], hpMul: 2.35, dmgMul: 1.6,
     waves: [
@@ -233,4 +235,6 @@ export const STR = {
   lvl: "Lv",
   you: "you",
   wanderer: "Wanderer",
+  streak: "Kill streak",
+  streaks: { 10: "Rampage", 25: "Unstoppable", 50: "Godlike", 100: "Legend of the Spire" },
 };

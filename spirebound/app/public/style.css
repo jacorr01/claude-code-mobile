@@ -32,7 +32,12 @@ body {
   -webkit-user-select: none;
   overscroll-behavior: none;
 }
-#cv { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; touch-action: none; }
+#cv, #gl, #fx { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; }
+#cv { touch-action: none; z-index: 0; }
+/* the 3D models, then the effects that fly over them */
+#gl, #fx { pointer-events: none; }
+#gl { z-index: 1; }
+#fx { z-index: 2; }
 h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: 0.06em; text-wrap: balance; }
 p { margin: 0; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -232,6 +237,13 @@ kbd { font: 600 0.66rem/1 ui-sans-serif, system-ui, sans-serif; padding: 3px 6px
 #banner { position: absolute; left: 0; right: 0; top: 30%; text-align: center; opacity: 0; transform: scale(0.94); transition: opacity 260ms ease, transform 260ms ease; padding: 0 16px; }
 #banner.on { opacity: 1; transform: none; }
 #banner h2 { font-size: clamp(1.7rem, 8vw, 3.8rem); text-transform: uppercase; letter-spacing: 0.14em; text-shadow: 0 0 40px rgba(134, 230, 255, 0.6), 0 3px 14px #000; }
+#combo { position: absolute; left: calc(14px + var(--sal)); top: calc(92px + var(--sat)); display: grid; justify-items: start; gap: 1px; opacity: 0; transform: translateX(-12px); transition: opacity 200ms ease, transform 200ms ease; text-shadow: 0 2px 6px #000; }
+#combo.on { opacity: 1; transform: none; }
+#combo b { font: 800 2rem/1 var(--display); color: var(--gold); font-variant-numeric: tabular-nums; }
+#combo.hit b { animation: thump 160ms ease-out; }
+@keyframes thump { from { transform: scale(1.35); } }
+#combo span { font: 700 0.62rem/1 var(--display); letter-spacing: 0.2em; text-transform: uppercase; color: var(--bone); }
+#combo i { display: block; height: 3px; width: 72px; border-radius: 2px; background: var(--gold); transform-origin: left; margin-top: 3px; }
 #banner.hazard h2 { color: #ffd9cf; text-shadow: 0 0 40px rgba(255, 70, 40, 0.85), 0 3px 14px #000; }
 #banner p { font-family: var(--display); letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); text-shadow: 0 2px 8px #000; }
 .pads { position: absolute; right: calc(14px + var(--sar)); bottom: calc(20px + var(--sab)); width: 196px; height: 178px; }

@@ -30,3 +30,6 @@ anim_{hero}_run,"run cycle sprite sheet (x3 heroes), public/art/anim",spriteshee
 anim_warden_atk,"melee swing sprite sheet, public/art/anim",spritesheet,"4 s clip of the swing, 10 frames around the strike",300px cells,from key pose,generate (video) + key pose
 anim_{gunner|knight}_atk,"firing / casting stance, public/art/anim",sprite,the attack key pose used as a single-frame stance,300px,from key pose,pose_{hero}_atk
 icons,"16 ability icons, public/art/icons",ui,"one 4x4 sheet of ability, ultimate and dash icons, sliced to 128px tiles",1:1 2k,STYLE FORMULA v1,generate
+pose_{hero}_run{down|up} / idle{down|up},front and back run key poses and idle poses (sprite fallback),sprite,the hero seen from the front and from behind,1:1 1k,STYLE FORMULA v1,generate + hero sprite
+anim_{hero}_run{down|up},"front and back run cycles (sprite fallback), public/art/anim",spritesheet,4 s clips cut to one stride cycle,300px cells,from key pose,generate (video) + key pose
+model_{id},"rigged 3D model per hero, foe and guardian, public/models",glb,"image-to-3D from the character sprite, auto-rigged; heroes carry Run, Idle and Attack clips, foes one Move clip; the hound and the dragon are unrigged and animated in code","4.5k-16k triangles, 512-1024px texture",from sprite,generate (3D) + sprite

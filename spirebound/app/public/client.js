@@ -8,6 +8,8 @@
  */
 import { STR, HEROES, HERO_ORDER, REALMS, BOSSES, ABILITIES, ENEMIES, TUNE, SCORE_CAP } from "./data.js";
 import { ANIMS } from "./anims.js";
+import { MODELS } from "./models.js";
+import { Stage3D } from "./stage3d.js";
 import { Game } from "./game.js";
 import { Sound } from "./audio.js";
 import { Input } from "./input.js";
@@ -26,6 +28,8 @@ const DEV = {
   dev: params.get("dev") === "1",
   hero: params.get("hero"),
   ab: (params.get("ab") || "").split(",").filter(Boolean),
+  realm: Math.max(0, Math.min(2, Number(params.get("realm")) || 0)),
+  skip: Number(params.get("skip")) || 0,
 };
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch { return d; } },
@@ -63,6 +67,24 @@ async function loadAnim(hero, act, meta) {
 
 // ── the game, its sound and its input ──────────────────────────────────────
 
+// The 3D character layer. `?flat=1` (or a browser without WebGL) falls back to sprites.
+const coarse = matchMedia("(pointer: coarse)").matches;
+const stage = params.get("flat") === "1" ? null : new Stage3D($("#gl"), coarse);
+const modelJobs = {};
+function loadModel(id) {
+  const m = MODELS[id];
+  if (!stage || !stage.ok || !m) return Promise.resolve();
+  return (modelJobs[id] ||= stage.load(id, m.src, m).catch(() => {}));
+}
+/** Every model a realm needs: the hero, its foes and its guardian. */
+function realmModels(index, heroId) {
+  const r = REALMS[index];
+  const ids = new Set([HEROES[heroId].sprite, BOSSES[r.boss].sprite, ENEMIES[BOSSES[r.boss].minion].sprite]);
+  for (const w of r.waves) for (const [type] of w.mix) ids.add(ENEMIES[type].sprite);
+  return Promise.all([...ids].map(loadModel));
+}
+const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+
 const sound = new Sound();
 sound.on = settings.sound;
 let input = null;
@@ -73,11 +95,11 @@ const game = new Game($("#cv"), art, {
   frame: (dt) => hud(dt),
   sfx: (n, v, r) => sound.play(n, v, r),
   event: (type, d) => handlers[type] && handlers[type](d),
-}, { shake: settings.shake, auto: DEV.auto, speed: DEV.speed, dev: DEV.dev });
+}, { shake: settings.shake, auto: DEV.auto, speed: DEV.speed, dev: DEV.dev, stage, top: $("#fx") });
 input = new Input(game, $("#cv"), $("#stick"));
 addEventListener("resize", () => game.resize());
 if (matchMedia("(pointer: coarse)").matches) document.body.classList.add("touch");
-window.__spire = { game, art };
+window.__spire = { game, art, stage };
 
 // ── screens ────────────────────────────────────────────────────────────────
 
@@ -349,6 +371,7 @@ function startRun(heroId, loadout) {
     $("#a2Btn img").src = `/art/icons/${picks[1]}.webp`;
     $("#ultBtn img").src = `/art/icons/${h.ult.id}.webp`;
     game.start(heroId, seed, picks);
+    if (DEV.realm) game.beginRealm(DEV.realm);
   };
   const local = () => ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0) || 1;
   if (net.seated) {
@@ -369,7 +392,10 @@ handlers.realm = ({ index }) => {
   $("#realmTitle").textContent = r.name;
   $("#realmHint").textContent = r.hint;
   show("realm");
-  const floor = loadFloor(r.floor);
+  // The floor and this realm's models load behind the intro card (models may take a moment longer;
+  // anything not ready yet is drawn as a sprite until it arrives).
+  const floor = Promise.all([loadFloor(r.floor), Promise.race([realmModels(index, run.hero), wait(9000)])]);
+  if (stage && stage.ok) stage.light(r.light[0], r.light[1], r.light[2]);
   const next = REALMS[index + 1];
   let done = false;
   const scr = $("#scr-realm");
@@ -385,9 +411,13 @@ handlers.realm = ({ index }) => {
       $("#realmName").textContent = r.name;
       input.mode = "play";
       game.go();
+      if (DEV.skip) game.realmT = DEV.skip;
       sound.music(true);
       banner(r.name, `${STR.realm} ${r.numeral}`, 1800);
-      if (next) loadFloor(next.floor);
+      if (next) {
+        loadFloor(next.floor);
+        realmModels(index + 1, run.hero);
+      }
     });
   };
   // Armed a beat late, so the tap that chose the hero or the boon cannot skip the card.
@@ -405,6 +435,10 @@ handlers.bossSpawn = ({ id }) => {
   $("#bossBar").classList.add("on");
 };
 handlers.pulse = () => banner(STR.ambush, "", 1100, true);
+handlers.streak = ({ n }) => {
+  banner(STR.streaks[n] || STR.streaks[100], `${n} ${STR.streak}`, 1300);
+  sound.play("levelup", 0.5, 1.4);
+};
 handlers.realmClear = ({ realm, score, bonus }) => {
   $("#bossBar").classList.remove("on");
   banner(STR.realmCleared, `+${fmt(bonus)}`, 2300);
@@ -469,7 +503,7 @@ function showEnd(won) {
   $("#endSub").textContent = won ? STR.wonSub : STR.fellIn.replace("{realm}", r.name);
   const stats = $("#endStats");
   stats.textContent = "";
-  for (const [k, v] of [[STR.score, fmt(game.score)], [STR.realms, `${game.cleared} / ${REALMS.length}`], [STR.kills, fmt(p.kills)], [STR.level, p.level], [STR.time, clock(game.runTime)]]) {
+  for (const [k, v] of [[STR.score, fmt(game.score)], [STR.realms, `${game.cleared} / ${REALMS.length}`], [STR.kills, fmt(p.kills)], [STR.streak, fmt(p.best)], [STR.level, p.level], [STR.time, clock(game.runTime)]]) {
     const d = el("div");
     d.append(el("dt", "", k), el("dd", "", String(v)));
     stats.append(d);
@@ -509,6 +543,7 @@ const H = {
   hp: $("#hpFill"), hpText: $("#hpText"), xp: $("#xpFill"), lvl: $("#lvlText"), wave: $("#waveFill"), sub: $("#realmSub"),
   score: $("#scoreText"), boss: $("#bossFill"), dash: $("#dashBtn"), ult: $("#ultBtn"), a1: $("#a1Btn"), a2: $("#a2Btn"),
   pips: [...document.querySelectorAll("#dashBtn .charges i")],
+  combo: $("#combo"), comboN: $("#comboN"), comboBar: $("#comboBar"),
 };
 const last = {};
 function put(node, key, value, prop) {
@@ -519,9 +554,17 @@ function put(node, key, value, prop) {
   else if (prop === "ready") node.classList.toggle("ready", value);
   else node.textContent = value;
 }
-let hudT = 0;
+let hudT = 0, slowT = 0;
 function hud(dt) {
   hudT += dt;
+  // If the frame rate stays low while models are on screen, trade quality for speed.
+  if (stage && stage.ok && game.running() && !DEV.auto) {
+    slowT = game.fps < 30 ? slowT + dt : Math.max(0, slowT - dt * 2);
+    if (slowT > 3) {
+      slowT = 0;
+      stage.lower();
+    }
+  }
   if (hudT < 0.066) return;
   hudT = 0;
   const p = game.player;
@@ -551,6 +594,19 @@ function hud(dt) {
     if (!a) continue;
     put(node, "ab" + i, Math.max(0, Math.min(1, a.cd / a.max)).toFixed(2), "cd");
     put(node, "abR" + i, a.cd <= 0, "ready");
+  }
+  // kill streak: shown from five, thumps on every kill, and drains as it is about to lapse
+  const streak = p.combo >= 5;
+  if (last.comboOn !== streak) { last.comboOn = streak; H.combo.classList.toggle("on", streak); }
+  if (streak) {
+    if (last.comboN !== p.combo) {
+      last.comboN = p.combo;
+      H.comboN.textContent = String.fromCharCode(215) + p.combo;
+      H.combo.classList.remove("hit");
+      void H.combo.offsetWidth;
+      H.combo.classList.add("hit");
+    }
+    H.comboBar.style.transform = `scaleX(${Math.max(0, p.comboT / TUNE.comboTime).toFixed(2)})`;
   }
   put(H.ult, "ult", (1 - p.ult / TUNE.ultMax).toFixed(2), "cd");
   put(H.ult, "ultR", p.ult >= TUNE.ultMax, "ready");

@@ -13,10 +13,13 @@
     <meta name="theme-color" content="#06080b" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2306080b'/%3E%3Cpath d='M32 4v56' stroke='%2386e6ff' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M22 58l4-34h12l4 34z' fill='%23283642' stroke='%2386e6ff' stroke-width='2'/%3E%3C/svg%3E" />
     <link rel="preload" href="/fonts/Cinzel.ttf" as="font" type="font/ttf" crossorigin />
+    <script type="importmap">{ "imports": { "three": "/vendor/three.module.min.js" } }</script>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
     <canvas id="cv" aria-label="Spirebound game view"></canvas>
+    <canvas id="gl" aria-hidden="true"></canvas>
+    <canvas id="fx" aria-hidden="true"></canvas>
 
     <div id="hud">
       <div class="hud-top">
@@ -40,6 +43,7 @@
       </div>
       <div id="bossBar"><div id="bossName"></div><div class="bar boss"><i id="bossFill"></i></div></div>
       <div id="banner"><h2 id="bannerTitle"></h2><p id="bannerSub"></p></div>
+      <div id="combo"><b id="comboN"></b><span data-t="streak"></span><i id="comboBar"></i></div>
       <div class="pads">
         <button id="ultBtn" type="button" class="pad ult" aria-label="Ultimate"><img alt="" /><kbd>R</kbd></button>
         <button id="a1Btn" type="button" class="pad ab" aria-label="Ability 1"><img alt="" /><kbd>Q</kbd></button>
